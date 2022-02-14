@@ -9,6 +9,8 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    Model.cpp \
+    RenderLoop.cpp \
     main.cpp \
     widget.cpp
 
@@ -16,6 +18,10 @@ INCLUDEPATH += glm
 
 HEADERS += \
     ImageBuffer.h \
+    Model.h \
+    RenderLoop.h \
+    time_utils.h \
+    utils.h \
     widget.h
 
 FORMS += \

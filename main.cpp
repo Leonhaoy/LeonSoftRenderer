@@ -5,12 +5,6 @@
 #include "ImageBuffer.h"
 #include "widget.h"
 
-void line(const int& x0, const int& y0, const int& x1, const int& y1, ImageBuffer* image, vec4 color) {
-    for (int i = x0; i < x1; i++) {
-        image->SetColorOfPixel(i, int(y0 + ((float)i - x0) / (x1 - x0) * (y1 - y0)), color);
-    }
-}
-
 int main(int argc, char* argv[]) {
     QApplication a(argc, argv);
 
@@ -24,14 +18,11 @@ int main(int argc, char* argv[]) {
         }
     }
     Widget w;
-    w.resize(256, 256);
-    w.show();
-    ImageBuffer image(256, 256);
-    image.Clear();
-    vec4 white(255, 255, 255, 255);
+    int width = 512, height = 512;
 
-    line(50, 50, 100, 100, &image, white);
-    w.renderFrame(image.Data());
+    w.resize(width, height);
+    w.show();
+    w.Init();
 
     return a.exec();
 }

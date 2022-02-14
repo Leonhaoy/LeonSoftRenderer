@@ -5,6 +5,8 @@
 #include <QThread>
 #include <QWidget>
 
+#include "RenderLoop.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui {
     class Widget;
@@ -16,13 +18,17 @@ class Widget : public QWidget {
 public:
     Widget(QWidget* parent = nullptr);
     ~Widget();
-    void renderFrame(unsigned char* data);
+    void RenderFrame(unsigned char* data);
+    void Init();
 
 protected:
     void paintEvent(QPaintEvent*) override;
+    void resizeEvent(QResizeEvent* event) override;
 
 private:
-    Ui::Widget* ui;
-    QImage* curFrame;
+    Ui::Widget* ui_;
+    QImage* cur_frame_;
+    QThread* loop_thread_;
+    RenderLoop* loop_;
 };
 #endif  // WIDGET_H

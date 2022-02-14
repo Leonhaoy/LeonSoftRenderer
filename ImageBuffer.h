@@ -7,25 +7,25 @@
 using namespace glm;
 class ImageBuffer {
 public:
-    ImageBuffer(int w = 500, int h = 500) : width(w), height(h) { buffer.resize(w * h * 4); }
+    ImageBuffer(int w = 500, int h = 500) : width_(w), height_(h) { buffer_.resize(w * h * 4); }
     ~ImageBuffer() {}
     void Resize(const int& w, const int& h) {
-        width = w;
-        height = h;
-        buffer.resize(w * h * 4);
+        width_ = w;
+        height_ = h;
+        buffer_.resize(w * h * 4);
     }
 
     void SetColorOfPixel(const int& x, const int& y, vec4 color) {
-        unsigned char* p = buffer.data();
-        int pixel = (y * width + x) * 4;
+        unsigned char* p = buffer_.data();
+        int pixel = (y * width_ + x) * 4;
         *(p + pixel) = color.r;
         *(p + pixel + 1) = color.g;
         *(p + pixel + 2) = color.b;
         *(p + pixel + 3) = color.a;
     }
-    unsigned char* Data() { return buffer.data(); }
+    unsigned char* Data() { return buffer_.data(); }
     void Clear() {
-        for (auto it = buffer.begin(); it != buffer.end(); ++it) {
+        for (auto it = buffer_.begin(); it != buffer_.end(); ++it) {
             *it = 0;
             *(++it) = 0;
             *(++it) = 0;
@@ -34,9 +34,10 @@ public:
     }
 
 private:
-    int width;
-    int height;
-    std::vector<unsigned char> buffer;
+    int width_;
+    int height_;
+    std::vector<unsigned char> buffer_;
 };
 
+#include <QObject>
 #endif  // IMAGEBUFFER_H
