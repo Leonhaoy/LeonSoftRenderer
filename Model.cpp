@@ -70,3 +70,11 @@ int Model::ReadObjFile(const char* filename) {
               << "normal: " << normals_.size() << std::endl;
     return 0;
 }
+mat4 Model::GetModelMatrix() {
+    mat4 result(1.0f);
+    result = translate(result, transform_.position);
+    result = rotate(result, transform_.rotation.x, vec3(1, 0, 0));
+    result = rotate(result, transform_.rotation.y, vec3(0, 1, 0));
+    result = rotate(result, transform_.rotation.z, vec3(0, 0, 1));
+    return result;
+}

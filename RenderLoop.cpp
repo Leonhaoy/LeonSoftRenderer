@@ -32,12 +32,42 @@ void line(int x0, int y0, int x1, int y1, ImageBuffer* image, vec4 color) {
         }
     }
 }
+RenderLoop::RenderLoop(int w, int h) : width_(w), height_(h) {
+    render_buffer_ = new ImageBuffer(w, h);
 
+    vec3 norlookat = normalize(camera_lookat_);
+    vec3 norup = normalize(camera_up_);
+    vec3 norright = normalize(cross(norlookat, norup));
+    norlookat = -norlookat;
+
+    view_matrix_ = translate(mat4(norright.x, norup.x, norlookat.x, 0, norright.y, norup.y, norlookat.y, 0, norright.z,
+                                  norup.z, norlookat.z, 0, 0, 0, 0, 1),
+                             -camera_pos_);
+
+    // printMat4(view_matrix_);
+
+    aspect_ = (float)w / h;
+    /*
+     *  perspective_matrix_ = MorthographicTocuboid * MperspectiveTOorthographic
+     *
+    float halftanfov = tan(2 / fov_);
+    perspective_matrix_ = mat4(1 / (halftanfov * near_ * aspect_), 0, 0, 0, 0, 1 / (halftanfov * near_), 0, 0, 0, 0,
+                               2 / (near_ - far_), 0, 0, 0, (far_ + near_) / (far_ - near_), 1) *
+                          mat4(near_, 0, 0, 0, 0, near_, 0, 0, 0, 0, near_ + far_, 1, 0, 0, -near_ * far_, 0);
+    perspective_matrix_ = mat4(1 / (halftanfov * aspect_), 0, 0, 0, 0, 1 / halftanfov, 0, 0, 0, 0,
+                               (near_ + far_) / (near_ - far_), 1, 0, 0, 2 * near_ * far_ / (near_ - far_), 0);
+    */
+    perspective_matrix_ = perspective(fov_, aspect_, near_, far_);
+    // printMat4(perspective_matrix_);
+}
+RenderLoop::~RenderLoop() {
+    delete render_buffer_;
+    delete model1_;
+}
 void RenderLoop::Resize(int w, int h) {
     width_ = w;
     height_ = h;
 }
-
 void RenderLoop::MainLoop() {
     TCHAR pathbuffer[MAX_PATH];
     if (!GetCurrentDirectory(MAX_PATH, pathbuffer)) {
@@ -50,13 +80,17 @@ void RenderLoop::MainLoop() {
     int renderframeindex = 0;
     uint64_t lastrendertime = 0;
     std::string objpath = workpath + "/obj/african_head.obj";
-    model1 = new Model();
-    model1->ReadObjFile(objpath.c_str());
-    std::vector<std::vector<vec3>> modelvs = model1->get_triangle_vertexs_();
-    std::vector<std::vector<vec2>> modeluvs = model1->get_triangle_uvs_();
-    std::vector<std::vector<vec3>> modelns = model1->get_triangle_normals_();
-    int trisize = model1->get_triangles_size_();
+    model1_ = new Model();
+    model1_->ReadObjFile(objpath.c_str());
+    model1_->transform_.position = vec3(0, 0, -1);
+    std::vector<std::vector<vec3>> modelvs = model1_->get_triangle_vertexs_();
+    std::vector<std::vector<vec2>> modeluvs = model1_->get_triangle_uvs_();
+    std::vector<std::vector<vec3>> modelns = model1_->get_triangle_normals_();
+    int trisize = model1_->get_triangles_size_();
 
+    mat4 model1mat = model1_->GetModelMatrix();
+    mat4 mvp = perspective_matrix_ * view_matrix_ * model1mat;
+    // renderloop
     while (true) {
         // std::cout << "MainLoop render " << renderframeindex++ << std::endl;
         uint64_t now = get_current_ms();
@@ -69,14 +103,14 @@ void RenderLoop::MainLoop() {
         // draw line of the model
         for (int i = 0; i < trisize; i++) {
             for (int j = 0; j < 3; j++) {
-                vec3 v0 = modelvs[i][j] + vec3(1, 1, 0);
-                vec3 v1 = modelvs[i][(j + 1) % 3] + vec3(1, 1, 0);
+                vec4 v0 = mvp * vec4(modelvs[i][j], 1) + vec4(1, 1, 0, 0);
+                vec4 v1 = mvp * vec4(modelvs[i][(j + 1) % 3], 1) + vec4(1, 1, 0, 0);
 
                 line(v0.x * width_ / 2, v0.y * height_ / 2, v1.x * width_ / 2, v1.y * height_ / 2, render_buffer_,
                      white);
             }
         }
-
+        renderframeindex++;
         emit FrameReady(render_buffer_->Data());
         uint64_t sleeptime = lastrendertime + 1000 - get_current_ms();
         if (sleeptime > 0) {

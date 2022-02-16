@@ -12,6 +12,7 @@ SOURCES += \
     Model.cpp \
     RenderLoop.cpp \
     main.cpp \
+    tgaimage.cpp \
     widget.cpp
 
 INCLUDEPATH += glm
@@ -20,6 +21,7 @@ HEADERS += \
     ImageBuffer.h \
     Model.h \
     RenderLoop.h \
+    tgaimage.h \
     time_utils.h \
     utils.h \
     widget.h
