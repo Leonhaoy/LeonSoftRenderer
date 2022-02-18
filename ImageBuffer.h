@@ -16,6 +16,9 @@ public:
     }
 
     void SetColorOfPixel(const int& x, const int& y, vec4 color) {
+        if (x > width_ || x < 0 || y > height_ || y < 0) {
+            return;
+        }
         unsigned char* p = buffer_.data();
         int pixel = (y * width_ + x) * 4;
         *(p + pixel) = color.r;

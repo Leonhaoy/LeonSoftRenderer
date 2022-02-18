@@ -76,5 +76,6 @@ mat4 Model::GetModelMatrix() {
     result = rotate(result, transform_.rotation.x, vec3(1, 0, 0));
     result = rotate(result, transform_.rotation.y, vec3(0, 1, 0));
     result = rotate(result, transform_.rotation.z, vec3(0, 0, 1));
+    result = scale(result, transform_.scale);
     return result;
 }

@@ -1,3 +1,6 @@
+# QT
+*.pro.user
+
 # Prerequisites
 *.d
 

@@ -27,13 +27,14 @@ private:
     vec3 camera_up_ = vec3(0, 1, 0);
 
     // view
-    float near_ = 2;
-    float far_ = 12;
-    float fov_ = 2;
+    float near_ = 1;
+    float far_ = 3;
+    float fov_ = 1.5f;
     float aspect_;
     mat4 view_matrix_;
     mat4 perspective_matrix_;
-
+    float* zbuffer_;
+    void DepthTest(std::vector<std::vector<vec3>> face, mat4 mvp);
 signals:
     void FrameReady(unsigned char* data);
 public slots:

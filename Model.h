@@ -6,10 +6,15 @@
 using namespace glm;
 //目前仅支持读取obj模型
 struct Transform {
-    Transform() {}
-    Transform(vec3 p, vec3 r) : position(p), rotation(r) {}
+    Transform() {
+        position = vec3(0);
+        rotation = vec3(0);
+        scale = vec3(1);
+    }
+    Transform(vec3 p, vec3 r, vec3 s) : position(p), rotation(r), scale(s) {}
     vec3 position;
     vec3 rotation;
+    vec3 scale;
 };
 class Model {
 private:
