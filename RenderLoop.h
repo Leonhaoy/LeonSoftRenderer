@@ -35,6 +35,7 @@ private:
     mat4 perspective_matrix_;
     float* zbuffer_;
     void DepthTest(std::vector<std::vector<vec3>> face, mat4 mvp);
+    void Rasterize();
 signals:
     void FrameReady(unsigned char* data);
 public slots:

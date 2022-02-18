@@ -11,6 +11,7 @@ CONFIG += c++11
 SOURCES += \
     Model.cpp \
     RenderLoop.cpp \
+    Shader.cpp \
     main.cpp \
     tgaimage.cpp \
     widget.cpp
@@ -21,6 +22,7 @@ HEADERS += \
     ImageBuffer.h \
     Model.h \
     RenderLoop.h \
+    Shader.h \
     tgaimage.h \
     time_utils.h \
     utils.h \

@@ -141,7 +141,7 @@ void RenderLoop::MainLoop() {
     model1_ = new Model();
     model1_->ReadObjFile(objpath.c_str());
     model1_->transform_.position = vec3(0, 0, 0);
-    model1_->transform_.rotation = vec3(0, 0, 0);
+    model1_->transform_.rotation = vec3(0, PI / 5, 0);
     model1_->transform_.scale = vec3(1) * 0.6f;
     std::vector<std::vector<vec3>> modelvs = model1_->get_triangle_vertexs_();
     std::vector<std::vector<vec2>> modeluvs = model1_->get_triangle_uvs_();
