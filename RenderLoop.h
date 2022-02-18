@@ -27,8 +27,8 @@ private:
     vec3 camera_up_ = vec3(0, 1, 0);
 
     // view
-    float near_ = 1;
-    float far_ = 3;
+    float near_ = 3;
+    float far_ = 1;
     float fov_ = 1.5f;
     float aspect_;
     mat4 view_matrix_;

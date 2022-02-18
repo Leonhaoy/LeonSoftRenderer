@@ -96,8 +96,7 @@ void RenderLoop::DepthTest(std::vector<std::vector<vec3>> face, mat4 mvp) {
         v0 = vec4(v0.x * width_ / 2, v0.y * height_ / 2, v0.z / 2, 1);
         v1 = vec4(v1.x * width_ / 2, v1.y * height_ / 2, v1.z / 2, 1);
         v2 = vec4(v2.x * width_ / 2, v2.y * height_ / 2, v2.z / 2, 1);
-
-        if (dot(camera_lookat_, cross(vec3(v1 - v0), vec3(v2 - v1))) < 0)
+        if (dot(camera_lookat_, cross(vec3(v1 - v0), vec3(v2 - v1))) > 0)
             continue;
         int boundingbox_minx = min(min(v0.x, v1.x), v2.x);
         int boundingbox_maxx = max(max(v0.x, v1.x), v2.x);
@@ -143,11 +142,10 @@ void RenderLoop::MainLoop() {
     model1_->ReadObjFile(objpath.c_str());
     model1_->transform_.position = vec3(0, 0, 0);
     model1_->transform_.rotation = vec3(0, 0, 0);
-    model1_->transform_.scale = vec3(1) * 1.f;
+    model1_->transform_.scale = vec3(1) * 0.6f;
     std::vector<std::vector<vec3>> modelvs = model1_->get_triangle_vertexs_();
     std::vector<std::vector<vec2>> modeluvs = model1_->get_triangle_uvs_();
     std::vector<std::vector<vec3>> modelns = model1_->get_triangle_normals_();
-    int trisize = model1_->get_triangles_size_();
 
     mat4 model1mat = model1_->GetModelMatrix();
     mat4 mvp = perspective_matrix_ * view_matrix_ * model1mat;
