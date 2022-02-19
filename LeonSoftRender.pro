@@ -9,6 +9,7 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    BlinPhongShader.cpp \
     Model.cpp \
     RenderLoop.cpp \
     Shader.cpp \
@@ -19,6 +20,7 @@ SOURCES += \
 INCLUDEPATH += glm
 
 HEADERS += \
+    BlinPhongShader.h \
     ImageBuffer.h \
     Model.h \
     RenderLoop.h \

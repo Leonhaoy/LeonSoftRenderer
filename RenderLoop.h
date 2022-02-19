@@ -2,6 +2,7 @@
 #define RENDERLOOP_H
 #include <QObject>
 
+#include "BlinPhongShader.h"
 #include "ImageBuffer.h"
 #include "Model.h"
 #include "utils.h"
@@ -20,6 +21,7 @@ private:
 
     // model1
     Model* model1_;
+    BlinPhongShader* model1shader;
 
     // camera
     vec3 camera_pos_ = vec3(0, 0, 2);
@@ -32,10 +34,15 @@ private:
     float fov_ = 1.5f;
     float aspect_;
     mat4 view_matrix_;
+
+    // illumination
+    vec3 light_pos_ = vec3(2, 4, 2);
+    float light_intensity_ = 10.f;
+
     mat4 perspective_matrix_;
     float* zbuffer_;
-    void DepthTest(std::vector<std::vector<vec3>> face, mat4 mvp);
-    void Rasterize();
+    void RenderDepthBuffer(std::vector<std::vector<vec3>> face, mat4 mvp);
+    void BPRasterize(Model* model, BlinPhongShader* shader);
 signals:
     void FrameReady(unsigned char* data);
 public slots:

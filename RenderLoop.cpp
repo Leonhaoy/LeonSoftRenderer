@@ -3,7 +3,6 @@
 #include <windows.h>
 
 #include "time_utils.h"
-
 vec3 GetBarycentric(const vec2& p, const vec2& v1, const vec2& v2, const vec2& v3) {
     vec2 vp3 = p - v3;
     vec2 v13 = v1 - v3;
@@ -71,7 +70,7 @@ RenderLoop::RenderLoop(int w, int h) : width_(w), height_(h) {
     printMat4(perspective_matrix_);
     zbuffer_ = new float[width_ * height_];
     for (int i = 0; i < width_ * height_; ++i) {
-        zbuffer_[i] = 0;
+        zbuffer_[i] = -1;
     }
 }
 RenderLoop::~RenderLoop() {
@@ -84,7 +83,7 @@ void RenderLoop::Resize(int w, int h) {
     height_ = h;
 }
 
-void RenderLoop::DepthTest(std::vector<std::vector<vec3>> face, mat4 mvp) {
+void RenderLoop::RenderDepthBuffer(std::vector<std::vector<vec3>> face, mat4 mvp) {
     int size = face.size();
     for (int i = 0; i < size; i++) {
         vec4 v0 = mvp * vec4(face[i][0], 1);
@@ -118,10 +117,66 @@ void RenderLoop::DepthTest(std::vector<std::vector<vec3>> face, mat4 mvp) {
                 }
             }
         }
+
         // render zbuffer
         for (int i = 0; i < width_; i++) {
             for (int j = 0; j < height_; j++) {
                 render_buffer_->SetColorOfPixel(i, j, vec4(vec3(1) * (zbuffer_[j * width_ + i] * 255.f), 255));
+            }
+        }
+    }
+}
+
+void RenderLoop::BPPipeLine(Model* m, BlinPhongShader* shader) {
+    mat4 modelmax = m->GetModelMatrix();
+    std::vector<std::vector<vec3>> vertexs = m->get_triangle_vertexs_();
+    std::vector<std::vector<vec2>> uvs = m->get_triangle_uvs_();
+    std::vector<std::vector<vec3>> normals = m->get_triangle_normals_();
+    int size = m->get_triangles_size_();
+    mat4 vp = perspective_matrix_ * view_matrix_;
+    shader->Init(modelmax, vp, camera_pos_, light_pos_, light_intensity_);
+    shader->set_zbuffer(zbuffer_);
+    for (int i = 0; i < size; i++) {
+        vertexDataIn vin[3];
+        vertexDataOut vout[3];
+        for (int j = 0; j < 3; j++) {
+            vin[j].vertex_pos = vec4(vertexs[i][j], 1);
+            vin[j].normal = normals[i][j];
+            shader->VertexShading(vin[j], vout[j]);
+        }
+        vec3 v0(vout[0].screen_pos), v1(vout[1].screen_pos), v2(vout[2].screen_pos);
+
+        // back face culling
+        if (dot(camera_lookat_, cross(vec3(v1 - v0), vec3(v2 - v1))) > 0)
+            continue;
+        int boundingbox_minx = min(min(v0.x, v1.x), v2.x);
+        int boundingbox_maxx = max(max(v0.x, v1.x), v2.x);
+        int boundingbox_miny = min(min(v0.y, v1.y), v2.y);
+        int boundingbox_maxy = max(max(v0.y, v1.y), v2.y);
+        for (int x = boundingbox_minx; x <= boundingbox_maxx; x++) {
+            for (int y = boundingbox_miny; y <= boundingbox_maxy; y++) {
+                if (x < 0 || x >= width_ || y < 0 || y >= height_)
+                    continue;
+                vec3 barycentric = GetBarycentric(vec2(x, y), v0, v1, v2);
+                // only rasterize pixel inside the triangle
+                if (barycentric.x < 0 || barycentric.y < 0 || barycentric.z < 0)
+                    continue;
+                float z = barycentric.x * v0.z + barycentric.y * v1.z + barycentric.z * v2.z;
+
+                // depth test
+                float* zb = zbuffer_ + y * width_ + x;
+                if (z > *zb) {
+                    *zb = z;
+                    fragmentDataIn pixel;
+                    pixel.world_pos = barycentric.x * vout[0].world_pos + barycentric.y * vout[1].world_pos +
+                                      barycentric.z * vout[2].world_pos;
+                    pixel.screen_pos = vec4(x, y, z, 1);
+                    pixel.normal =
+                        barycentric.x * normals[i][0] + barycentric.y * normals[i][1] + barycentric.z * normals[i][2];
+                    pixel.front_facing = true;
+                    pixel.uv = barycentric.x * uvs[i][0] + barycentric.y * uvs[i][1] + barycentric.z * uvs[i][2];
+                    render_buffer_->SetColorOfPixel(x, y, shader->FragmentShading(pixel) * 255.f);
+                }
             }
         }
     }
@@ -137,43 +192,27 @@ void RenderLoop::MainLoop() {
     std::cout << "Current path:" << workpath << std::endl;
     int renderframeindex = 0;
     uint64_t lastrendertime = 0;
+
     std::string objpath = workpath + "/obj/african_head.obj";
     model1_ = new Model();
     model1_->ReadObjFile(objpath.c_str());
     model1_->transform_.position = vec3(0, 0, 0);
     model1_->transform_.rotation = vec3(0, PI / 5, 0);
-    model1_->transform_.scale = vec3(1) * 0.6f;
-    std::vector<std::vector<vec3>> modelvs = model1_->get_triangle_vertexs_();
-    std::vector<std::vector<vec2>> modeluvs = model1_->get_triangle_uvs_();
-    std::vector<std::vector<vec3>> modelns = model1_->get_triangle_normals_();
+    model1_->transform_.scale = vec3(1) * 1.f;
 
-    mat4 model1mat = model1_->GetModelMatrix();
-    mat4 mvp = perspective_matrix_ * view_matrix_ * model1mat;
-    printMat4(mvp);
     // renderloop
     while (true) {
+        model1shader = new BlinPhongShader(width_, height_);
         // std::cout << "MainLoop render " << renderframeindex++ << std::endl;
         uint64_t now = get_current_ms();
         lastrendertime = now;
         render_buffer_->Resize(width_, height_);
         render_buffer_->Clear();
 
-        vec4 white(255, 255, 255, 255);
-
-        /*
-        // draw line of the model
-        for (int i = 0; i < trisize; i++) {
-            for (int j = 0; j < 3; j++) {
-                vec4 v0 = mvp * vec4(modelvs[i][j], 1);
-                vec4 v1 = mvp * vec4(modelvs[i][(j + 1) % 3], 1);
-                v0 = v0 / v0.w + vec4(1, 1, 0, 0);
-                v1 = v1 / v1.w + vec4(1, 1, 0, 0);
-                line(v0.x * width_ / 2, v0.y * height_ / 2, v1.x * width_ / 2, v1.y * height_ / 2, render_buffer_,
-                     white);
-            }
-        }
-        */
-        DepthTest(modelvs, mvp);
+        // RenderDepthBuffer(model1_->get_triangle_vertexs_(),
+        //                 perspective_matrix_ * view_matrix_ * model1_->GetModelMatrix());
+        BPPipeLine(model1_, model1shader);
+        std::cout << "render finish!" << std::endl;
 
         renderframeindex++;
         emit FrameReady(render_buffer_->Data());
