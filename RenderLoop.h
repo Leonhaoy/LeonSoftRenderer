@@ -31,18 +31,18 @@ private:
     // view
     float near_ = 3;
     float far_ = 1;
-    float fov_ = 1.5f;
+    float fov_ = 1.3f;
     float aspect_;
     mat4 view_matrix_;
 
     // illumination
     vec3 light_pos_ = vec3(2, 4, 2);
-    float light_intensity_ = 10.f;
+    float light_intensity_ = 20.f;
 
     mat4 perspective_matrix_;
     float* zbuffer_;
     void RenderDepthBuffer(std::vector<std::vector<vec3>> face, mat4 mvp);
-    void BPRasterize(Model* model, BlinPhongShader* shader);
+    void BPPipeLine(Model* model, BlinPhongShader* shader);
 signals:
     void FrameReady(unsigned char* data);
 public slots:

@@ -9,16 +9,20 @@
 struct vertexDataIn {
     vec4 vertex_pos;
     vec3 normal;
+    vec3 unortho_tangent;
 };
 struct vertexDataOut {
-    vec4 world_pos;
+    vec3 world_pos;
     vec4 screen_pos;
+    vec3 tangent_light_dir;
+    vec3 tangent_camera_dir;
 };
 
 struct fragmentDataIn {
-    vec4 world_pos;
+    vec3 world_pos;
     vec4 screen_pos;
-    vec3 normal;
+    vec3 light_dir;
+    vec3 camera_dir;
     bool front_facing;
     vec2 uv;
 };
@@ -28,7 +32,7 @@ public:
     Shader(const int& w, const int& h) : screen_w(w), screen_h(h) {}
     ~Shader() {}
     virtual void VertexShading(IN vertexDataIn& in, OUT vertexDataOut& out);
-    virtual vec4 FragmentShading(IN fragmentDataIn in);
+    virtual vec4 FragmentShading(IN fragmentDataIn& in);
     virtual void Init(const mat4& model, const mat4& view_projection, const vec3& camera_pos) {
         model_ = model;
         view_projection_ = view_projection;

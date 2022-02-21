@@ -3,7 +3,7 @@ vec3 Shader::texture(vec2 uv, TGAImage& image) {
     int width = image.get_width();
     int height = image.get_height();
     float x = uv[0] * width;
-    float y = uv[1] * height;
+    float y = (1 - uv[1]) * height;
     if ((x < 0) || (x > width - 1) || (y < 0) || (y > height - 1)) {
         return vec3(0.f);
     }
@@ -38,5 +38,6 @@ vec3 Shader::texture(vec2 uv, TGAImage& image) {
     c3 = image.getV3(ix, yoffset);
     c4 = image.getV3(xoffset, yoffset);
     vec3 interpolatedc = w1 * c1 + w2 * c2 + w3 * c3 + w4 * c4;
-    return interpolatedc;
+    std::swap(interpolatedc[0], interpolatedc[2]);  // tgaimage use bgr which should be transfer to rgb
+    return interpolatedc / 255.f;
 }

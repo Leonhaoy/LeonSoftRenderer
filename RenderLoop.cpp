@@ -139,9 +139,17 @@ void RenderLoop::BPPipeLine(Model* m, BlinPhongShader* shader) {
     for (int i = 0; i < size; i++) {
         vertexDataIn vin[3];
         vertexDataOut vout[3];
+        // 计算出片元对应切线空间未正交化的tangent轴单位向量，传入顶点着色器中计算正交化后的tbn矩阵，并将光照注视方向转换到该坐标系下
+        vec3 E1 = vertexs[i][1] - vertexs[i][0];
+        vec3 E2 = vertexs[i][2] - vertexs[i][0];
+        vec2 deltaUV1 = uvs[i][1] - uvs[i][0];
+        vec2 deltaUV2 = uvs[i][2] - uvs[i][0];
+        vec3 unortho_tangent =
+            (deltaUV2.y * E1 - deltaUV1.y * E2) * (1.f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y));
         for (int j = 0; j < 3; j++) {
             vin[j].vertex_pos = vec4(vertexs[i][j], 1);
             vin[j].normal = normals[i][j];
+            vin[j].unortho_tangent = unortho_tangent;
             shader->VertexShading(vin[j], vout[j]);
         }
         vec3 v0(vout[0].screen_pos), v1(vout[1].screen_pos), v2(vout[2].screen_pos);
@@ -171,8 +179,13 @@ void RenderLoop::BPPipeLine(Model* m, BlinPhongShader* shader) {
                     pixel.world_pos = barycentric.x * vout[0].world_pos + barycentric.y * vout[1].world_pos +
                                       barycentric.z * vout[2].world_pos;
                     pixel.screen_pos = vec4(x, y, z, 1);
-                    pixel.normal =
-                        barycentric.x * normals[i][0] + barycentric.y * normals[i][1] + barycentric.z * normals[i][2];
+                    pixel.light_dir = barycentric.x * vout[0].tangent_light_dir +
+                                      barycentric.y * vout[1].tangent_light_dir +
+                                      barycentric.z * vout[2].tangent_light_dir;
+                    pixel.camera_dir = barycentric.x * vout[0].tangent_camera_dir +
+                                       barycentric.y * vout[1].tangent_camera_dir +
+                                       barycentric.z * vout[2].tangent_camera_dir;
+
                     pixel.front_facing = true;
                     pixel.uv = barycentric.x * uvs[i][0] + barycentric.y * uvs[i][1] + barycentric.z * uvs[i][2];
                     render_buffer_->SetColorOfPixel(x, y, shader->FragmentShading(pixel) * 255.f);
@@ -197,13 +210,24 @@ void RenderLoop::MainLoop() {
     model1_ = new Model();
     model1_->ReadObjFile(objpath.c_str());
     model1_->transform_.position = vec3(0, 0, 0);
-    model1_->transform_.rotation = vec3(0, PI / 5, 0);
-    model1_->transform_.scale = vec3(1) * 1.f;
+    model1_->transform_.rotation = vec3(0, 0, 0);
+    model1_->transform_.scale = vec3(1) * 1.0f;
+    std::string diffusepath = workpath + "/image/african_head_diffuse.tga";
+    std::string normalpath = workpath + "/image/african_head_nm_tangent.tga";
+    TGAImage diffuseimage, normalimage;
+    if (!diffuseimage.read_tga_file(diffusepath.c_str())) {
+        std::cerr << "Read diffuseimage file failed!" << std::endl;
+    }
+    if (!normalimage.read_tga_file(normalpath.c_str())) {
+        std::cerr << "Read normalpath file failed!" << std::endl;
+    }
 
     // renderloop
     while (true) {
         model1shader = new BlinPhongShader(width_, height_);
-        // std::cout << "MainLoop render " << renderframeindex++ << std::endl;
+        model1shader->set_diffuse_img_(diffuseimage);
+        model1shader->set_normal_img_(normalimage);
+        //  std::cout << "MainLoop render " << renderframeindex++ << std::endl;
         uint64_t now = get_current_ms();
         lastrendertime = now;
         render_buffer_->Resize(width_, height_);
@@ -220,5 +244,6 @@ void RenderLoop::MainLoop() {
         if (sleeptime > 0) {
             Sleep(sleeptime);
         }
+        delete model1shader;
     }
 }
