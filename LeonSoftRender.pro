@@ -13,6 +13,7 @@ SOURCES += \
     Model.cpp \
     RenderLoop.cpp \
     Shader.cpp \
+    ShadowShader.cpp \
     main.cpp \
     tgaimage.cpp \
     widget.cpp
@@ -25,6 +26,7 @@ HEADERS += \
     Model.h \
     RenderLoop.h \
     Shader.h \
+    ShadowShader.h \
     tgaimage.h \
     time_utils.h \
     utils.h \

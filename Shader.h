@@ -29,7 +29,7 @@ struct fragmentDataIn {
 
 class Shader {
 public:
-    Shader(const int& w, const int& h) : screen_w(w), screen_h(h) {}
+    Shader(const int& w, const int& h) : screen_w(w), screen_h(h), zbuffer_(nullptr) {}
     ~Shader() {}
     virtual void VertexShading(IN vertexDataIn& in, OUT vertexDataOut& out);
     virtual vec4 FragmentShading(IN fragmentDataIn& in);
@@ -40,15 +40,16 @@ public:
     }
     void set_zbuffer(float* zb) { zbuffer_ = zb; }
     vec3 texture(vec2 uv, TGAImage& image);
+    float textureShadow(float x, float y);
 
 protected:
     mat4 model_;
     mat4 view_projection_;
     vec3 camera_pos_;
 
-    float* zbuffer_;
     int screen_w;
     int screen_h;
+    float* zbuffer_;
 };
 
 #endif  // SHADER_H

@@ -14,6 +14,10 @@ public:
         light_pos_ = light_pos;
         light_power_ = light_power;
     }
+    void EnableShadowMap(float* map, mat4 light) {
+        zbuffer_ = map;
+        light_matrix_ = light;
+    }
     void set_diffuse_img_(TGAImage& image) { diffuse_img_ = image; }
     void set_normal_img_(TGAImage& image) { normal_img_ = image; }
 
@@ -22,7 +26,8 @@ private:
     float light_power_;
     TGAImage diffuse_img_;
     TGAImage normal_img_;
-    vec3 k = vec3(1.f, 0.2f, 0.2f);
+    vec3 k = vec3(1.f, 0.2f, 0.15f);
+    mat4 light_matrix_;
 };
 
 #endif  // BLINPHONGSHADER_H
